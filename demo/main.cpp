@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include "simple_svg.h"
+#include <simple-svg-writer/simple_svg.h>
 
 using namespace svg;
 

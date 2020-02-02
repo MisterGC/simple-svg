@@ -1,13 +1,5 @@
-project (simple-svg)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required (VERSION 3.5.0 FATAL_ERROR)
+project (simple-svg-writer)
 
-add_executable(simple_svg main.cpp simple_svg.h)
-
-set_property(TARGET simple_svg PROPERTY CXX_STANDARD 11)
-
-                     
-if(MSVC)
-   add_definitions(/D_CRT_SECURE_NO_WARNINGS)
-   add_definitions(/D_SCL_SECURE_NO_WARNINGS)
-   add_definitions(/DNOMINMAX)
-endif(MSVC)
+add_subdirectory (lib)
+add_subdirectory (demo)
