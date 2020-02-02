@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <simple-svg-writer/simple_svg.h>
 
-using namespace svg;
+using namespace simple_svg;
 
 // Demo page shows sample usage of the Simple SVG library.
 

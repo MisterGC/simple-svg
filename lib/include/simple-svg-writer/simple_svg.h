@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-namespace svg
+namespace simple_svg
 {
     // Utility XML/String Functions.
     template <typename T>
