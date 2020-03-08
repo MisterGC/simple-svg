@@ -50,17 +50,21 @@ namespace simple_svg
         ss << " " << attribute_name << "=\"" << value << unit << "\"";
         return ss.str();
     }
-    inline std::string elemStart(std::string const & element_name)
+    inline std::string openStartTag(std::string const & element_name)
     {
-        return "\t<" + element_name + " ";
+        return "<" + element_name;
     }
-    inline std::string elemEnd(std::string const & element_name)
+    inline std::string closeEmptyTag()
+    {
+        return "/>";
+    }
+    inline std::string closeTag()
+    {
+        return ">";
+    }
+    inline std::string endTag(std::string const & element_name)
     {
         return "</" + element_name + ">\n";
-    }
-    inline std::string emptyElemEnd()
-    {
-        return "/>\n";
     }
 
     // Quick optional return type.  This allows functions to return an invalid
@@ -298,13 +302,37 @@ namespace simple_svg
     public:
         Shape(Fill const & fill = Fill(), Stroke const & stroke = Stroke())
             : fill(fill), stroke(stroke) { }
-        virtual ~Shape() { }
-        virtual std::string toString(Layout const & layout) const = 0;
+        virtual ~Shape() = default;
         virtual void offset(Point const & offset) = 0;
+
+        std::string description() const { return descr; }
+        void setDescription(const std::string &desc) { descr = desc; }
+        std::string toString(const Layout &layout) const override
+        {
+            std::stringstream ss;
+            ss << openStartTag(shapeName())
+               << shapeAttributes(layout)
+               << fill.toString(layout)
+               << stroke.toString(layout)
+               << closeTag()
+               << "\n"
+               << openStartTag("desc")
+               << closeTag()
+               << descr
+               << endTag("desc")
+               << endTag(shapeName());
+            return ss.str();
+        }
+
+        virtual std::string shapeName() const = 0;
+        virtual std::string shapeAttributes(const Layout &layout) const = 0;
+
     protected:
         Fill fill;
         Stroke stroke;
+        std::string descr = "";
     };
+
     template <typename T>
     inline std::string vectorToString(std::vector<T> collection, Layout const & layout)
     {
@@ -318,18 +346,24 @@ namespace simple_svg
     class Circle : public Shape
     {
     public:
-        Circle(Point const & center, double diameter, Fill const & fill,
+        Circle(Point const & center, double radius, Fill const & fill,
             Stroke const & stroke = Stroke())
-            : Shape(fill, stroke), center(center), radius(diameter / 2) { }
-        std::string toString(Layout const & layout) const
+            : Shape(fill, stroke), center(center), radius(radius) { }
+
+        std::string shapeName() const override
+        {
+            return "circle";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("circle") << attribute("cx", translateX(center.x, layout))
-                << attribute("cy", translateY(center.y, layout))
-                << attribute("r", translateScale(radius, layout)) << fill.toString(layout)
-                << stroke.toString(layout) << emptyElemEnd();
+            ss << attribute("cx", translateX(center.x, layout))
+               << attribute("cy", translateY(center.y, layout))
+               << attribute("r", translateScale(radius, layout));
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             center.x += offset.x;
@@ -347,16 +381,22 @@ namespace simple_svg
             Fill const & fill = Fill(), Stroke const & stroke = Stroke())
             : Shape(fill, stroke), center(center), radius_width(width / 2),
             radius_height(height / 2) { }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "ellipse";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("ellipse") << attribute("cx", translateX(center.x, layout))
+            ss <<  attribute("cx", translateX(center.x, layout))
                 << attribute("cy", translateY(center.y, layout))
                 << attribute("rx", translateScale(radius_width, layout))
-                << attribute("ry", translateScale(radius_height, layout))
-                << fill.toString(layout) << stroke.toString(layout) << emptyElemEnd();
+                << attribute("ry", translateScale(radius_height, layout));
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             center.x += offset.x;
@@ -375,16 +415,22 @@ namespace simple_svg
             Fill const & fill = Fill(), Stroke const & stroke = Stroke())
             : Shape(fill, stroke), edge(edge), width(width),
             height(height) { }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "rect";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("rect") << attribute("x", translateX(edge.x, layout))
+            ss <<  attribute("x", translateX(edge.x, layout))
                 << attribute("y", translateY(edge.y, layout))
                 << attribute("width", translateScale(width, layout))
-                << attribute("height", translateScale(height, layout))
-                << fill.toString(layout) << stroke.toString(layout) << emptyElemEnd();
+                << attribute("height", translateScale(height, layout));
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             edge.x += offset.x;
@@ -403,16 +449,22 @@ namespace simple_svg
             Stroke const & stroke = Stroke())
             : Shape(Fill(), stroke), start_point(start_point),
             end_point(end_point) { }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "line";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("line") << attribute("x1", translateX(start_point.x, layout))
+            ss  << attribute("x1", translateX(start_point.x, layout))
                 << attribute("y1", translateY(start_point.y, layout))
                 << attribute("x2", translateX(end_point.x, layout))
-                << attribute("y2", translateY(end_point.y, layout))
-                << stroke.toString(layout) << emptyElemEnd();
+                << attribute("y2", translateY(end_point.y, layout));
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             start_point.x += offset.x;
@@ -437,19 +489,22 @@ namespace simple_svg
             points.push_back(point);
             return *this;
         }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "polygon";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("polygon");
-
             ss << "points=\"";
             for (unsigned i = 0; i < points.size(); ++i)
                 ss << translateX(points[i].x, layout) << "," << translateY(points[i].y, layout) << " ";
             ss << "\" ";
-
-            ss << fill.toString(layout) << stroke.toString(layout) << emptyElemEnd();
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             for (unsigned i = 0; i < points.size(); ++i) {
@@ -465,9 +520,9 @@ namespace simple_svg
     {
     public:
        Path(Fill const & fill = Fill(), Stroke const & stroke = Stroke())
-          : Shape(fill, stroke) 
+          : Shape(fill, stroke)
        {  startNewSubPath(); }
-       Path(Stroke const & stroke = Stroke()) : Shape(Color::Transparent, stroke) 
+       Path(Stroke const & stroke = Stroke()) : Shape(Color::Transparent, stroke)
        {  startNewSubPath(); }
        Path & operator<<(Point const & point)
        {
@@ -481,28 +536,30 @@ namespace simple_svg
             paths.emplace_back();
        }
 
-       std::string toString(Layout const & layout) const
+       std::string shapeName() const override
        {
-          std::stringstream ss;
-          ss << elemStart("path");
-
-          ss << "d=\"";
-          for (auto const& subpath: paths)
-          {
-             if (subpath.empty())
-                continue;
-
-             ss << "M";
-             for (auto const& point: subpath)
-                ss << translateX(point.x, layout) << "," << translateY(point.y, layout) << " ";
-             ss << "z ";
-          }
-          ss << "\" ";
-          ss << "fill-rule=\"evenodd\" ";
-
-          ss << fill.toString(layout) << stroke.toString(layout) << emptyElemEnd();
-          return ss.str();
+           return "path";
        }
+
+       std::string shapeAttributes(const Layout &layout) const override
+       {
+           std::stringstream ss;
+           ss << "d=\"";
+           for (auto const& subpath: paths)
+           {
+               if (subpath.empty())
+                   continue;
+
+               ss << "M";
+               for (auto const& point: subpath)
+                   ss << translateX(point.x, layout) << "," << translateY(point.y, layout) << " ";
+               ss << "z ";
+           }
+           ss << "\" ";
+           ss << "fill-rule=\"evenodd\" ";
+           return ss.str();
+       }
+
 
        void offset(Point const & offset)
        {
@@ -531,19 +588,22 @@ namespace simple_svg
             points.push_back(point);
             return *this;
         }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "polyline";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("polyline");
-
             ss << "points=\"";
             for (unsigned i = 0; i < points.size(); ++i)
                 ss << translateX(points[i].x, layout) << "," << translateY(points[i].y, layout) << " ";
             ss << "\" ";
-
-            ss << fill.toString(layout) << stroke.toString(layout) << emptyElemEnd();
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             for (unsigned i = 0; i < points.size(); ++i) {
@@ -560,15 +620,20 @@ namespace simple_svg
         Text(Point const & origin, std::string const & content, Fill const & fill = Fill(),
              Font const & font = Font(), Stroke const & stroke = Stroke())
             : Shape(fill, stroke), origin(origin), content(content), font(font) { }
-        std::string toString(Layout const & layout) const
+
+        std::string shapeName() const override
+        {
+            return "text";
+        }
+
+        std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << elemStart("text") << attribute("x", translateX(origin.x, layout))
-                << attribute("y", translateY(origin.y, layout))
-                << fill.toString(layout) << stroke.toString(layout) << font.toString(layout)
-                << ">" << content << elemEnd("text");
+            ss  << attribute("x", translateX(origin.x, layout))
+                << attribute("y", translateY(origin.y, layout));
             return ss.str();
         }
+
         void offset(Point const & offset)
         {
             origin.x += offset.x;
@@ -588,7 +653,7 @@ namespace simple_svg
 
         Document & operator<<(Shape const & shape)
         {
-            body_nodes_str_list.push_back(shape.toString(layout));
+            bodyNodeStrs.push_back(shape.toString(layout));
             return *this;
         }
         std::string toString() const
@@ -618,18 +683,19 @@ namespace simple_svg
                 << attribute("height", layout.dimensions.height, unit)
                 << attribute("xmlns", "http://www.w3.org/2000/svg")
                 << attribute("version", "1.1") << ">\n";
-            for (const auto& body_node_str : body_nodes_str_list) {
+            for (const auto& body_node_str : bodyNodeStrs) {
                 str << body_node_str;
             }
-            str << elemEnd("svg");
+            str << endTag("svg");
         }
 
     private:
         std::string file_name;
         Layout layout;
 
-        std::vector<std::string> body_nodes_str_list;
+        std::vector<std::string> bodyNodeStrs;
     };
+
 }
 
 #endif
