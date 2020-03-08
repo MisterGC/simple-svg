@@ -47,7 +47,7 @@ namespace simple_svg
         T const & value, std::string const & unit = "")
     {
         std::stringstream ss;
-        ss << attribute_name << "=\"" << value << unit << "\" ";
+        ss << " " << attribute_name << "=\"" << value << unit << "\"";
         return ss.str();
     }
     inline std::string elemStart(std::string const & element_name)
@@ -135,11 +135,22 @@ namespace simple_svg
     struct Layout
     {
         enum Origin { TopLeft, BottomLeft, TopRight, BottomRight };
+        enum Unit {px, mm};
 
-        Layout(Dimensions const & dimensions = Dimensions(400, 300), Origin origin = BottomLeft,
-            double scale = 1, Point const & origin_offset = Point(0, 0))
-            : dimensions(dimensions), scale(scale), origin(origin), origin_offset(origin_offset) { }
+        Layout(Dimensions const & dimensions = Dimensions(400, 300),
+               Unit unit = mm,
+               Origin origin = BottomLeft,
+               double scale = 1,
+               Point const & origin_offset = Point(0, 0)):
+            dimensions(dimensions),
+            unit(unit),
+            scale(scale),
+            origin(origin),
+            origin_offset(origin_offset)
+        { }
+
         Dimensions dimensions;
+        Unit unit;
         double scale;
         Origin origin;
         Point origin_offset;
@@ -599,11 +610,12 @@ namespace simple_svg
     private:
         void writeToStream(std::ostream& str) const
         {
+            auto unit = layout.unit == Layout::mm ? "mm" : "px";
             str << "<?xml " << attribute("version", "1.0") << attribute("standalone", "no")
                 << "?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" "
                 << "\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg "
-                << attribute("width", layout.dimensions.width, "px")
-                << attribute("height", layout.dimensions.height, "px")
+                << attribute("width", layout.dimensions.width, unit)
+                << attribute("height", layout.dimensions.height, unit)
                 << attribute("xmlns", "http://www.w3.org/2000/svg")
                 << attribute("version", "1.1") << ">\n";
             for (const auto& body_node_str : body_nodes_str_list) {
