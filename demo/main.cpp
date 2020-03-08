@@ -61,12 +61,6 @@ int main()
     chart << polyline_a << polyline_b << polyline_c;
     doc << chart;
 
-    // Condensed notation, parenthesis isolate temporaries that are inserted into parents.
-    doc << (LineChart(Dimensions(65, 5))
-        << (Polyline(Stroke(.5, Color::Blue)) << Point(0, 0) << Point(10, 8) << Point(20, 13))
-        << (Polyline(Stroke(.5, Color::Orange)) << Point(0, 10) << Point(10, 16) << Point(20, 20))
-        << (Polyline(Stroke(.5, Color::Cyan)) << Point(0, 5) << Point(10, 13) << Point(20, 16)));
-
     doc << Circle(Point(80, 80), 20, Fill(Color(100, 200, 120)), Stroke(1, Color(200, 250, 150)));
 
     doc << Text(Point(5, 77), "Simple SVG", Color::Silver, Font(10, "Verdana"));
