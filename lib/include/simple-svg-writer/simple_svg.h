@@ -498,7 +498,7 @@ namespace simple_svg
         std::string shapeAttributes(const Layout &layout) const override
         {
             std::stringstream ss;
-            ss << "points=\"";
+            ss << " points=\"";
             for (unsigned i = 0; i < points.size(); ++i)
                 ss << translateX(points[i].x, layout) << "," << translateY(points[i].y, layout) << " ";
             ss << "\" ";
