@@ -6,7 +6,7 @@ target_include_directories (${PROJECT_NAME} INTERFACE include/)
                      
 if(MSVC)
    target_compile_definitions (${PROJECT_NAME} 
-    PUBLIC
+    INTERFACE
             _CRT_SECURE_NO_WARNINGS
             _SCL_SECURE_NO_WARNINGS
             NOMINMAX
